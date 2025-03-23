@@ -65,7 +65,7 @@ def main(batch: int, device: Literal["cpu", "cuda"]) -> None:
     logger.info(f"Start training on image sizes {IMAGE_SIZE}")
     train(
         model=model,
-        loss_fn=torch.nn.BCEWithLogitsLoss(),
+        loss_fn=torch.nn.CrossEntropyLoss(),
         optimizer=optimizer,
         epochs=20,
         device=device,
