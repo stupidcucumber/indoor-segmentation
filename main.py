@@ -1,5 +1,7 @@
+import argparse
 import logging
 import sys
+from typing import Literal
 
 import torch
 from torch.utils.data import DataLoader
@@ -18,10 +20,40 @@ logging.basicConfig(
 logger = logging.getLogger(__name__)
 
 
-if __name__ == "__main__":
+def parse_arguments() -> argparse.Namespace:
+    """Parse commandline arguments.
 
+    Returns
+    -------
+    argparse.Namespace
+        Extracted arguments.
+    """
+    parser = argparse.ArgumentParser()
+
+    parser.add_argument(
+        "--batch", type=int, default=16, help="Batch size for training."
+    )
+
+    parser.add_argument(
+        "--device", type=str, default="cuda", help="Device on which to train."
+    )
+
+    return parser.parse_args()
+
+
+def main(batch: int, device: Literal["cpu", "cuda"]) -> None:
+    """Start training loop.
+
+    Parameters
+    ----------
+    batch : int
+        Batch size.
+    device : Literal["cpu", "cuda"]
+        Device on which to inference model.
+    """
     logger.info("Loading model...")
-    model = Unet(in_channles=3, nclassses=150)
+    model = Unet(in_channels=3, nclasses=150)
+    model.to(device)
     optimizer = torch.optim.Adam(model.parameters())
     IMAGE_SIZE = (572, 572)
 
@@ -36,8 +68,19 @@ if __name__ == "__main__":
         loss_fn=torch.nn.BCEWithLogitsLoss(),
         optimizer=optimizer,
         epochs=20,
-        device="cpu",
-        train_dataloader=DataLoader(train_dataset, 2, shuffle=True),
-        val_dataloader=DataLoader(val_dataset, 8),
-        test_dataloader=DataLoader(test_dataset, 8),
+        device=device,
+        train_dataloader=DataLoader(train_dataset, batch, shuffle=True),
+        val_dataloader=DataLoader(val_dataset, batch),
+        test_dataloader=DataLoader(test_dataset, batch),
     )
+
+
+if __name__ == "__main__":
+    args = parse_arguments()
+
+    try:
+        main(**dict(args._get_kwargs()))
+    except KeyboardInterrupt:
+        logger.info("User interrupted training process.")
+    else:
+        logger.info("Training successfully finished.")
