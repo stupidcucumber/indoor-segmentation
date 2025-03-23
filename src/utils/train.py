@@ -74,6 +74,9 @@ def train(
 
         train_tqdm = tqdm(train_dataloader, total=len(train_dataloader))
 
+        loss_accumulator = []
+        accuracy_accumulator = []
+
         for images, labels in train_tqdm:
 
             images = images.to(device)
@@ -82,13 +85,20 @@ def train(
             logits, loss = _train_step(model, images, labels, optimizer, loss_fn)
             accuracy = calculate_accuracy(logits, labels)
 
+            loss_accumulator.append(loss)
+            accuracy_accumulator.append(accuracy)
+
             train_tqdm.set_description(
-                f"Loss - {loss:0.3f}, Accuracy - {accuracy:0.3f}"
+                f"Loss - {np.mean(loss_accumulator):0.3f}, "
+                f"Accuracy - {np.mean(accuracy_accumulator):0.3f}"
             )
 
         with torch.no_grad():
 
             val_tqdm = tqdm(val_dataloader, total=len(val_dataloader))
+
+            loss_accumulator = []
+            accuracy_accumulator = []
 
             for images, labels in val_tqdm:
 
@@ -98,8 +108,12 @@ def train(
                 logits, loss = _val_step(model, images, labels, loss_fn)
                 accuracy = calculate_accuracy(logits, labels)
 
+                loss_accumulator.append(loss)
+                accuracy_accumulator.append(accuracy)
+
                 val_tqdm.set_description(
-                    f"Loss - {loss:0.3f}, Accuracy - {accuracy:0.3f}"
+                    f"Loss - {np.mean(loss_accumulator):0.3f}, "
+                    f"Accuracy - {np.mean(accuracy_accumulator):0.3f}"
                 )
 
     if test_dataloader is not None:
@@ -108,7 +122,8 @@ def train(
 
             logger.info("Testing trained model...")
 
-            loss_track = []
+            loss_accumulator = []
+            accuracy_accumulator = []
 
             for images, labels in tqdm(
                 test_dataloader, desc="Testing", total=len(test_dataloader)
@@ -118,7 +133,12 @@ def train(
                 labels = labels.to(device)
 
                 logits, loss = _val_step(model, images, labels, loss_fn)
+                accuracy = calculate_accuracy(logits, labels)
 
-                loss_track.append(loss)
+                loss_accumulator.append(loss)
+                accuracy_accumulator.append(accuracy)
 
-            logger.info(f"Test result is: loss - {np.mean(loss)}")
+            logger.info(
+                f"Test result is: loss - {np.mean(loss):0.3f}, "
+                f"accuracy - {np.mean(accuracy_accumulator):0.3f}"
+            )
