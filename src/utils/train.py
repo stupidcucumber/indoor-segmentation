@@ -5,6 +5,8 @@ import numpy as np
 import torch
 from tqdm import tqdm
 
+from src.utils.metrics import calculate_accuracy
+
 logger = logging.getLogger(__name__)
 
 
@@ -12,10 +14,10 @@ def _val_step(
     model: torch.nn.Module,
     images: torch.Tensor,
     labels: torch.Tensor,
-    loss_fn: torch.nn.BCEWithLogitsLoss,
-) -> float:
+    loss_fn: torch.nn.CrossEntropyLoss,
+) -> tuple[torch.Tensor, float]:
     logits = model(images)
-    return loss_fn(logits, labels).item()
+    return logits, loss_fn(logits, labels).item()
 
 
 def _train_step(
@@ -23,19 +25,19 @@ def _train_step(
     images: torch.Tensor,
     labels: torch.Tensor,
     optimizer: torch.optim.Optimizer,
-    loss_fn: torch.nn.BCEWithLogitsLoss,
-) -> float:
+    loss_fn: torch.nn.CrossEntropyLoss,
+) -> tuple[torch.Tensor, float]:
     optimizer.zero_grad()
     logits = model(images)
     loss: torch.Tensor = loss_fn(logits, labels)
     loss.backward()
     optimizer.step()
-    return loss.item()
+    return logits, loss.item()
 
 
 def train(
     model: torch.nn.Module,
-    loss_fn: torch.nn.BCEWithLogitsLoss,
+    loss_fn: torch.nn.CrossEntropyLoss,
     optimizer: torch.optim.Optimizer,
     epochs: int,
     device: Literal["cpu", "cuda"],
@@ -49,7 +51,7 @@ def train(
     ----------
     model : torch.nn.Module
         Model to train.
-    loss_fn : torch.nn.BCEWithLogitsLoss
+    loss_fn : torch.nn.CrossEntropyLoss
         Loss function for training.
     optimizer : torch.optim.Optimizer
         Optimizer to use in training.
@@ -77,9 +79,12 @@ def train(
             images = images.to(device)
             labels = labels.to(device)
 
-            loss = _train_step(model, images, labels, optimizer, loss_fn)
+            logits, loss = _train_step(model, images, labels, optimizer, loss_fn)
+            accuracy = calculate_accuracy(logits, labels)
 
-            train_tqdm.set_description(f"Loss - {loss:0.3f}")
+            train_tqdm.set_description(
+                f"Loss - {loss:0.3f}, Accuracy - {accuracy:0.3f}"
+            )
 
         with torch.no_grad():
 
@@ -90,9 +95,12 @@ def train(
                 images = images.to(device)
                 labels = labels.to(device)
 
-                loss = _val_step(model, images, labels, loss_fn)
+                logits, loss = _val_step(model, images, labels, loss_fn)
+                accuracy = calculate_accuracy(logits, labels)
 
-                val_tqdm.set_description(f"Loss - {loss:0.3f}")
+                val_tqdm.set_description(
+                    f"Loss - {loss:0.3f}, Accuracy - {accuracy:0.3f}"
+                )
 
     if test_dataloader is not None:
 
@@ -109,7 +117,7 @@ def train(
                 images = images.to(device)
                 labels = labels.to(device)
 
-                loss = _val_step(model, images, labels, loss_fn)
+                logits, loss = _val_step(model, images, labels, loss_fn)
 
                 loss_track.append(loss)
 
