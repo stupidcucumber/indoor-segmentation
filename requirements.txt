@@ -1,1 +1,6 @@
 pre-commit
+torch
+torchvision
+tqdm
+datasets
+numpy

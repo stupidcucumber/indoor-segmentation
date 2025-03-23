@@ -40,7 +40,7 @@ class SegmentationDataset(Dataset):
         )
 
     def _unravel_mask(self, mask: torch.Tensor) -> torch.Tensor:
-        result = torch.zeros([self.nclasses, *mask.shape[1:]], dtype=torch.float32)
+        result = torch.zeros([1 + self.nclasses, *mask.shape[1:]], dtype=torch.float32)
 
         for class_id in mask.unique():
 

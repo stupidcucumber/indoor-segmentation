@@ -14,7 +14,7 @@ class Unet(Module):
         Number of input channels, e.g. 1 for monochrome images, 3 for RGB.
     nclasses : int
         Number of classes. If it is binary segmentation
-        must be 2 (one for background).
+        must be 1 (one for background already allocated).
 
     Notes
     -----
@@ -35,7 +35,7 @@ class Unet(Module):
         self.upsampling_2 = Upsampling(256, 128)
         self.upsampling_1 = Upsampling(128, 64)
 
-        self.conv_1x1 = Conv2d(64, nclasses, (1, 1))
+        self.conv_1x1 = Conv2d(64, 1 + nclasses, (1, 1))
 
     def forward(self, x: torch.Tensor) -> torch.Tensor:
         """Segment input image.
