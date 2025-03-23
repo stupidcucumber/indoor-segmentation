@@ -1,5 +1,5 @@
 import torch
-from torch.nn import Conv2d, MaxPool2d, Module, ReLU
+from torch.nn import BatchNorm2d, Conv2d, MaxPool2d, Module, ReLU
 
 
 class Downsampling(Module):
@@ -22,6 +22,7 @@ class Downsampling(Module):
         self.max_pool = max_pool
         if self.max_pool:
             self.max_pool_2d = MaxPool2d((2, 2), stride=(2, 2))
+        self.bn = BatchNorm2d(in_channels)
         self.conv_1 = Conv2d(in_channels, out_channels, (3, 3), padding=(0, 0))
         self.relu_1 = ReLU()
         self.conv_2 = Conv2d(out_channels, out_channels, (3, 3), padding=(0, 0))
@@ -43,5 +44,6 @@ class Downsampling(Module):
         """
         if self.max_pool:
             x = self.max_pool_2d(x)
+        x = self.bn(x)
         x = self.relu_1(self.conv_1(x))
         return self.relu_2(self.conv_2(x))

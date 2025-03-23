@@ -1,5 +1,5 @@
 import torch
-from torch.nn import Conv2d, ConvTranspose2d, Module, ReLU
+from torch.nn import BatchNorm2d, Conv2d, ConvTranspose2d, Module, ReLU
 
 
 class Upsampling(Module):
@@ -18,6 +18,7 @@ class Upsampling(Module):
         self.conv_trans_2d = ConvTranspose2d(
             in_channels, in_channels // 2, kernel_size=(2, 2), stride=2
         )
+        self.bn = BatchNorm2d(in_channels)
         self.conv_1 = Conv2d(in_channels, out_channels, kernel_size=(3, 3))
         self.relu_1 = ReLU()
         self.conv_2 = Conv2d(out_channels, out_channels, kernel_size=(3, 3))
@@ -46,5 +47,7 @@ class Upsampling(Module):
         y = y[..., diffY:-diffY, diffX:-diffX]
 
         x = torch.cat([y, x], dim=1)
+
+        x = self.bn(x)
         x = self.relu_1(self.conv_1(x))
         return self.relu_2(self.conv_2(x))
