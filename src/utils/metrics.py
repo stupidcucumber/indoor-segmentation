@@ -21,5 +21,6 @@ def calculate_accuracy(logits: torch.Tensor, target: torch.Tensor) -> float:
     predictions = decode(logits)
     ground_truth = decode(target)
     return (
-        torch.sum(predictions == ground_truth) / (target.shape[-2] * target.shape[-1])
+        torch.sum(predictions == ground_truth)
+        / (target.shape[-2] * target.shape[-1] * target.shape[0])
     ).item()
