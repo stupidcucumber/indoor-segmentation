@@ -72,6 +72,11 @@ class SegmentationDataset(Dataset):
             Image and its corresponding label.
         """
         _dict = self.data[index]
-        return self.image_transform(_dict["image"]), self._unravel_mask(
-            self.mask_transform(_dict["annotation"])
-        )
+
+        image = self.image_transform(_dict["image"])
+        mask = self._unravel_mask(self.mask_transform(_dict["annotation"]))
+
+        if image.shape[0] == 1:
+            image = image.repeat([3, 1, 1])
+
+        return image, mask
