@@ -38,10 +38,19 @@ def parse_arguments() -> argparse.Namespace:
         "--device", type=str, default="cuda", help="Device on which to train."
     )
 
+    parser.add_argument(
+        "--backbone",
+        type=str,
+        default="resnet",
+        help="Backbone for the model. Choose from ['resnet', 'alexnet'].",
+    )
+
     return parser.parse_args()
 
 
-def main(batch: int, device: Literal["cpu", "cuda"]) -> None:
+def main(
+    batch: int, device: Literal["cpu", "cuda"], backbone: Literal["resnet", "alexnet"]
+) -> None:
     """Start training loop.
 
     Parameters
@@ -50,12 +59,14 @@ def main(batch: int, device: Literal["cpu", "cuda"]) -> None:
         Batch size.
     device : Literal["cpu", "cuda"]
         Device on which to inference model.
+    backbone : Literal["resnet", "alexnet"]
+        Backbone for the segmentation model.
     """
     logger.info("Loading model...")
-    model = Unet(in_channels=3, nclasses=150)
+    model = Unet(in_channels=3, nclasses=150, backbone=backbone)
     model.to(device)
     optimizer = torch.optim.Adam(model.parameters())
-    IMAGE_SIZE = (572, 572)
+    IMAGE_SIZE = (576, 576)
 
     logger.info("Loading datasets...")
     train_dataset = SegmentationDataset(split="train", image_size=IMAGE_SIZE)
