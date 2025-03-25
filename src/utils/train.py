@@ -77,6 +77,8 @@ def train(
         loss_accumulator = []
         accuracy_accumulator = []
 
+        model.train()
+
         for images, labels in train_tqdm:
 
             images = images.to(device)
@@ -94,6 +96,8 @@ def train(
             )
 
         with torch.no_grad():
+
+            model.eval()
 
             val_tqdm = tqdm(val_dataloader, total=len(val_dataloader))
 
@@ -119,6 +123,8 @@ def train(
     if test_dataloader is not None:
 
         with torch.no_grad():
+
+            model.eval()
 
             logger.info("Testing trained model...")
 
