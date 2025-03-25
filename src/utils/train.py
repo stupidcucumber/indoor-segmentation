@@ -15,9 +15,19 @@ def _val_step(
     images: torch.Tensor,
     labels: torch.Tensor,
     loss_fn: torch.nn.CrossEntropyLoss,
+    aux: bool = False,
 ) -> tuple[torch.Tensor, float]:
     logits = model(images)
-    return logits, loss_fn(logits, labels).item()
+
+    if aux:
+
+        loss = (loss_fn(logits["out"], labels) + loss_fn(logits["aux"], labels)).item()
+
+    else:
+
+        loss = loss_fn(logits, labels).item()
+
+    return logits, loss
 
 
 def _train_step(
@@ -26,10 +36,20 @@ def _train_step(
     labels: torch.Tensor,
     optimizer: torch.optim.Optimizer,
     loss_fn: torch.nn.CrossEntropyLoss,
+    aux: bool = False,
 ) -> tuple[torch.Tensor, float]:
+
     optimizer.zero_grad()
     logits = model(images)
-    loss: torch.Tensor = loss_fn(logits, labels)
+
+    if aux:
+
+        loss = loss_fn(logits["out"], labels) + loss_fn(logits["aux"], labels)
+
+    else:
+
+        loss: torch.Tensor = loss_fn(logits, labels)
+
     loss.backward()
     optimizer.step()
     return logits, loss.item()
@@ -44,6 +64,7 @@ def train(
     train_dataloader: torch.utils.data.DataLoader,
     val_dataloader: torch.utils.data.DataLoader,
     test_dataloader: torch.utils.data.DataLoader | None = None,
+    aux: bool = False,
 ) -> None:
     """Train model.
 
@@ -65,6 +86,8 @@ def train(
         Examples for validation.
     test_dataloader : torch.utils.data.DataLoader | None
         Examples for testing. By default is None.
+    aux : bool
+        Whether to use auxiliraly features.
     """
     logger.info(f"Start training for {epochs} epochs.")
 
@@ -84,8 +107,12 @@ def train(
             images = images.to(device)
             labels = labels.to(device)
 
-            logits, loss = _train_step(model, images, labels, optimizer, loss_fn)
-            accuracy = calculate_accuracy(logits, labels)
+            logits, loss = _train_step(
+                model, images, labels, optimizer, loss_fn, aux=aux
+            )
+            accuracy = calculate_accuracy(
+                logits if not aux else logits["out"].float(), labels
+            )
 
             loss_accumulator.append(loss)
             accuracy_accumulator.append(accuracy)
@@ -109,8 +136,10 @@ def train(
                 images = images.to(device)
                 labels = labels.to(device)
 
-                logits, loss = _val_step(model, images, labels, loss_fn)
-                accuracy = calculate_accuracy(logits, labels)
+                logits, loss = _val_step(model, images, labels, loss_fn, aux=aux)
+                accuracy = calculate_accuracy(
+                    logits if not aux else logits["out"].float(), labels
+                )
 
                 loss_accumulator.append(loss)
                 accuracy_accumulator.append(accuracy)
@@ -138,8 +167,10 @@ def train(
                 images = images.to(device)
                 labels = labels.to(device)
 
-                logits, loss = _val_step(model, images, labels, loss_fn)
-                accuracy = calculate_accuracy(logits, labels)
+                logits, loss = _val_step(model, images, labels, loss_fn, aux)
+                accuracy = calculate_accuracy(
+                    logits if not aux else logits["out"].float(), labels
+                )
 
                 loss_accumulator.append(loss)
                 accuracy_accumulator.append(accuracy)
