@@ -77,7 +77,9 @@ class ResNetDownsampling(Module):
         if self.max_pool:
             self.max_pool_2d = MaxPool2d((2, 2), stride=(2, 2), padding=0)
 
-        self.res_block = ResidualBlock(in_channels, out_channels)
+        self.res_block_1 = ResidualBlock(in_channels, out_channels)
+        self.res_block_2 = ResidualBlock(out_channels, out_channels)
+        self.res_block_3 = ResidualBlock(out_channels, out_channels)
 
     def forward(self, x: torch.Tensor) -> torch.Tensor:
         """Downsample input.
@@ -95,4 +97,6 @@ class ResNetDownsampling(Module):
         """
         if self.max_pool:
             x = self.max_pool_2d(x)
-        return self.res_block(x)
+        x = self.res_block_1(x)
+        x = self.res_block_2(x)
+        return self.res_block_3(x)
