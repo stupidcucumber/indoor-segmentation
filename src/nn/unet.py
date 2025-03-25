@@ -1,8 +1,10 @@
+from typing import Literal
+
 import torch
 from torch.nn import Conv2d, Module
 
-from src.nn.part.downsampling import Downsampling
-from src.nn.part.upsampling import Upsampling
+from src.nn.part.downsampling import AlexNetDownsampling, ResNetDownsampling
+from src.nn.part.upsampling import AlexNetUpsampling, ResNetUpsampling
 
 
 class Unet(Module):
@@ -15,14 +17,38 @@ class Unet(Module):
     nclasses : int
         Number of classes. If it is binary segmentation
         must be 1 (one for background already allocated).
+    backbone : Literal["resnet", "alexnet"]
+        Backbone to use for model. By default, it is AlexNet.
+
+    Raises
+    ------
+    ValueError
+        In case any parameters are invalid.
 
     Notes
     -----
         For more, please refer to the paper https://arxiv.org/pdf/1505.04597.
     """
 
-    def __init__(self, in_channels: int, nclasses: int) -> None:
+    def __init__(
+        self,
+        in_channels: int,
+        nclasses: int,
+        backbone: Literal["resnet", "alexnet"] = "alexnet",
+    ) -> None:
         super(Unet, self).__init__()
+
+        if backbone == "resnet":
+            Downsampling = ResNetDownsampling
+            Upsampling = ResNetUpsampling
+        elif backbone == "alexnet":
+            Downsampling = AlexNetDownsampling
+            Upsampling = AlexNetUpsampling
+        else:
+            raise ValueError(
+                f"Such backbone is not available: {backbone}. "
+                "Please choose among: 'resnet', 'alexnet'!"
+            )
 
         self.downsampling_1 = Downsampling(in_channels, 64, max_pool=False)
         self.downsampling_2 = Downsampling(64, 128)
