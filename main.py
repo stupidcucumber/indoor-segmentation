@@ -36,6 +36,10 @@ def parse_arguments() -> argparse.Namespace:
     )
 
     parser.add_argument(
+        "--epochs", type=int, default=20, help="Number of epochs to train for."
+    )
+
+    parser.add_argument(
         "--device", type=str, default="cuda", help="Device on which to train."
     )
 
@@ -59,6 +63,7 @@ def parse_arguments() -> argparse.Namespace:
 
 def main(
     batch: int,
+    epochs: int,
     device: Literal["cpu", "cuda"],
     backbone: Literal["resnet", "alexnet"],
     image_size: list[int],
@@ -69,6 +74,8 @@ def main(
     ----------
     batch : int
         Batch size.
+    epochs : int
+        Number of epochs to train for.
     device : Literal["cpu", "cuda"]
         Device on which to inference model.
     backbone : Literal["resnet", "alexnet"]
@@ -91,7 +98,7 @@ def main(
         model=model,
         loss_fn=torch.nn.CrossEntropyLoss(),
         optimizer=optimizer,
-        epochs=20,
+        epochs=epochs,
         device=device,
         train_dataloader=DataLoader(train_dataset, batch, shuffle=True),
         val_dataloader=DataLoader(val_dataset, batch),
