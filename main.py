@@ -91,7 +91,6 @@ def main(
     logger.info("Loading datasets...")
     train_dataset = SegmentationDataset(split="train", image_size=image_size)
     val_dataset = SegmentationDataset(split="validation", image_size=image_size)
-    test_dataset = SegmentationDataset(split="test", image_size=image_size)
 
     logger.info(f"Start training on image sizes {image_size}")
     train(
@@ -102,7 +101,6 @@ def main(
         device=device,
         train_dataloader=DataLoader(train_dataset, batch, shuffle=True),
         val_dataloader=DataLoader(val_dataset, batch),
-        test_dataloader=DataLoader(test_dataset, batch),
     )
 
     torch.save(model.state_dict(), f"{backbone}_last_{datetime.now().isoformat()}.pt")
