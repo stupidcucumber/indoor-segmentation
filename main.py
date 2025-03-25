@@ -45,11 +45,22 @@ def parse_arguments() -> argparse.Namespace:
         help="Backbone for the model. Choose from ['resnet', 'alexnet'].",
     )
 
+    parser.add_argument(
+        "--image-size",
+        type=int,
+        nargs=2,
+        default=[256, 256],
+        help="Size of the input. It must be some degree of 2 to correctly propagate.",
+    )
+
     return parser.parse_args()
 
 
 def main(
-    batch: int, device: Literal["cpu", "cuda"], backbone: Literal["resnet", "alexnet"]
+    batch: int,
+    device: Literal["cpu", "cuda"],
+    backbone: Literal["resnet", "alexnet"],
+    image_size: list[int],
 ) -> None:
     """Start training loop.
 
@@ -61,19 +72,20 @@ def main(
         Device on which to inference model.
     backbone : Literal["resnet", "alexnet"]
         Backbone for the segmentation model.
+    image_size : list[int]
+        Size of the input in format [HEIGHT, WIDTH].
     """
     logger.info("Loading model...")
     model = Unet(in_channels=3, nclasses=150, backbone=backbone)
     model.to(device)
     optimizer = torch.optim.Adam(model.parameters())
-    IMAGE_SIZE = (576, 576)
 
     logger.info("Loading datasets...")
-    train_dataset = SegmentationDataset(split="train", image_size=IMAGE_SIZE)
-    val_dataset = SegmentationDataset(split="validation", image_size=IMAGE_SIZE)
-    test_dataset = SegmentationDataset(split="test", image_size=IMAGE_SIZE)
+    train_dataset = SegmentationDataset(split="train", image_size=image_size)
+    val_dataset = SegmentationDataset(split="validation", image_size=image_size)
+    test_dataset = SegmentationDataset(split="test", image_size=image_size)
 
-    logger.info(f"Start training on image sizes {IMAGE_SIZE}")
+    logger.info(f"Start training on image sizes {image_size}")
     train(
         model=model,
         loss_fn=torch.nn.CrossEntropyLoss(),
