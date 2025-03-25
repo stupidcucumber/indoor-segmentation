@@ -36,7 +36,7 @@ class SegmentationDataset(Dataset):
         self.image_transform = Compose([ToTensor(), Resize(image_size)])
 
         self.mask_transform = Compose(
-            [PILToTensor(), Resize((388, 388), interpolation=InterpolationMode.NEAREST)]
+            [PILToTensor(), Resize(image_size, interpolation=InterpolationMode.NEAREST)]
         )
 
     def _unravel_mask(self, mask: torch.Tensor) -> torch.Tensor:
