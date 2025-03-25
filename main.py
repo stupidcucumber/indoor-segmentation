@@ -7,6 +7,7 @@ from typing import Literal
 import torch
 from torch.utils.data import DataLoader
 
+from src.nn.deeplab import create_deeplabv3_model
 from src.nn.unet import Unet
 from src.utils.data import SegmentationDataset
 from src.utils.train import train
@@ -30,6 +31,13 @@ def parse_arguments() -> argparse.Namespace:
         Extracted arguments.
     """
     parser = argparse.ArgumentParser()
+
+    parser.add_argument(
+        "--seg-model",
+        type=str,
+        default="unet",
+        help="Model to train: unet, deeplabv3. By default it is unet.",
+    )
 
     parser.add_argument(
         "--batch", type=int, default=16, help="Batch size for training."
@@ -62,6 +70,7 @@ def parse_arguments() -> argparse.Namespace:
 
 
 def main(
+    seg_model: Literal["unet", "deeplabv3"],
     batch: int,
     epochs: int,
     device: Literal["cpu", "cuda"],
@@ -72,6 +81,8 @@ def main(
 
     Parameters
     ----------
+    seg_model : Literal["unet", "deeplabv3"]
+        Segmentation model to train.
     batch : int
         Batch size.
     epochs : int
@@ -84,7 +95,12 @@ def main(
         Size of the input in format [HEIGHT, WIDTH].
     """
     logger.info("Loading model...")
-    model = Unet(in_channels=3, nclasses=150, backbone=backbone)
+
+    if seg_model == "unet":
+        model = Unet(in_channels=3, nclasses=150, backbone=backbone)
+    elif seg_model == "deeplabv3":
+        model = create_deeplabv3_model(output_channels=151)
+
     model.to(device)
     optimizer = torch.optim.Adam(model.parameters())
 
@@ -101,6 +117,7 @@ def main(
         device=device,
         train_dataloader=DataLoader(train_dataset, batch, shuffle=True),
         val_dataloader=DataLoader(val_dataset, batch),
+        aux=seg_model == "deeplabv3",
     )
 
     torch.save(model.state_dict(), f"{backbone}_last_{datetime.now().isoformat()}.pt")
