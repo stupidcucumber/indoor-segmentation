@@ -1,6 +1,7 @@
 import argparse
 import logging
 import sys
+from datetime import datetime
 from typing import Literal
 
 import torch
@@ -96,6 +97,8 @@ def main(
         val_dataloader=DataLoader(val_dataset, batch),
         test_dataloader=DataLoader(test_dataset, batch),
     )
+
+    torch.save(model.state_dict(), f"{backbone}_last_{datetime.now().isoformat()}.pt")
 
 
 if __name__ == "__main__":
