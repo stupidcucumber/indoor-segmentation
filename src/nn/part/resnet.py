@@ -1,5 +1,5 @@
 import torch
-from torch.nn import Conv2d, Module, ReLU
+from torch.nn import BatchNorm2d, Conv2d, Module, ReLU
 
 
 class ResidualBlock(Module):
@@ -17,8 +17,10 @@ class ResidualBlock(Module):
         super(ResidualBlock, self).__init__()
 
         self.conv_1 = Conv2d(in_channels, out_channels, (3, 3), padding="same")
+        self.bn_1 = BatchNorm2d(out_channels)
         self.relu_1 = ReLU()
         self.conv_2 = Conv2d(out_channels, out_channels, (3, 3), padding="same")
+        self.bn_2 = BatchNorm2d(out_channels)
         self.conv_1x1 = Conv2d(in_channels, out_channels, (1, 1))
         self.relu_2 = ReLU()
 
@@ -37,6 +39,6 @@ class ResidualBlock(Module):
             Extracted features.
         """
         residual_x = self.conv_1x1(x)
-        x = self.relu_1(self.conv_1(x))
-        x = self.conv_2(x)
+        x = self.relu_1(self.bn_1(self.conv_1(x)))
+        x = self.bn_2(self.conv_2(x))
         return self.relu_2(residual_x + x)
