@@ -2,6 +2,7 @@ import argparse
 import logging
 import sys
 from datetime import datetime
+from pathlib import Path
 from typing import Literal
 
 import torch
@@ -9,7 +10,7 @@ from torch.utils.data import DataLoader
 
 from src.nn.deeplab import create_deeplabv3_model
 from src.nn.unet import Unet
-from src.utils.data import SegmentationDataset
+from src.utils.data import VOCSegmentationDataset
 from src.utils.train import train
 
 logging.basicConfig(
@@ -96,17 +97,23 @@ def main(
     """
     logger.info("Loading model...")
 
+    NCLASSES = 21
+
     if seg_model == "unet":
-        model = Unet(in_channels=3, nclasses=150, backbone=backbone)
+        model = Unet(in_channels=3, nclasses=NCLASSES, backbone=backbone)
     elif seg_model == "deeplabv3":
-        model = create_deeplabv3_model(output_channels=151)
+        model = create_deeplabv3_model(output_channels=NCLASSES)
 
     model.to(device)
     optimizer = torch.optim.Adam(model.parameters())
 
     logger.info("Loading datasets...")
-    train_dataset = SegmentationDataset(split="train", image_size=image_size)
-    val_dataset = SegmentationDataset(split="validation", image_size=image_size)
+    train_dataset = VOCSegmentationDataset(
+        split="train", root=Path("data"), nclasses=NCLASSES, image_size=image_size
+    )
+    val_dataset = VOCSegmentationDataset(
+        split="validation", root=Path("data"), nclasses=NCLASSES, image_size=image_size
+    )
 
     logger.info(f"Start training on image sizes {image_size}")
     train(
