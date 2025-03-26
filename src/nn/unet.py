@@ -61,7 +61,7 @@ class Unet(Module):
         self.upsampling_2 = Upsampling(256, 128)
         self.upsampling_1 = Upsampling(128, 64)
 
-        self.conv_1x1 = Conv2d(64, 1 + nclasses, (1, 1))
+        self.conv_1x1 = Conv2d(64, nclasses, (1, 1))
 
     def forward(self, x: torch.Tensor) -> torch.Tensor:
         """Segment input image.
