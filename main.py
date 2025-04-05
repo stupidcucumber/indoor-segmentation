@@ -105,7 +105,7 @@ def main(
         model = create_deeplabv3_model(output_channels=NCLASSES)
 
     model.to(device)
-    optimizer = torch.optim.Adam(model.parameters())
+    optimizer = torch.optim.SGD(model.parameters())
 
     logger.info("Loading datasets...")
     train_dataset = VOCSegmentationDataset(
