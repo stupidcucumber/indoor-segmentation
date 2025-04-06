@@ -75,8 +75,6 @@ class ResNetUpsampling(Module):
             in_channels, in_channels // 2, kernel_size=(2, 2), stride=2
         )
         self.res_block_1 = ResidualBlock(in_channels, out_channels)
-        self.res_block_2 = ResidualBlock(out_channels, out_channels)
-        self.res_block_3 = ResidualBlock(out_channels, out_channels)
 
     def forward(self, x: torch.Tensor, y: torch.Tensor) -> torch.Tensor:
         """Upsample input.
@@ -97,7 +95,4 @@ class ResNetUpsampling(Module):
 
         x = torch.cat([y, x], dim=1)
 
-        x = self.res_block_1(x)
-        x = self.res_block_2(x)
-
-        return self.res_block_3(x)
+        return self.res_block_1(x)
