@@ -35,4 +35,8 @@ def create_deeplabv3_model(
         model.aux_classifier = DeepLabHead(1024, output_channels)
     else:
         model = torch.load(weights, map_location=lambda loc, state: loc)
-    return model
+    return models.segmentation.deeplabv3_resnet101(
+        weights=DeepLabV3_ResNet101_Weights.COCO_WITH_VOC_LABELS_V1,
+        progress=True,
+        aux_loss=True,
+    )
